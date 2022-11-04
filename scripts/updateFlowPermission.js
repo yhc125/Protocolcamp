@@ -1,15 +1,15 @@
-const { Framework } = require("@superfluid-finance/sdk-core");
-
 const ethers = require("ethers")
+const { Framework } = require("@superfluid-finance/sdk-core")
 
-const EmploymentAddress = "0xd22254B20aEB002380C28bB2Bb0149b462720bca"
+
+const EmploymentAddress = "0x5CE84E535bc749eaF40d7f8E7F9244700f2a09a6"
 
 const url = process.env.MUMBAI_URL
 
 const customHttpProvider = new ethers.providers.JsonRpcProvider(url)
 
 async function updateFlowPermissions(
-    operator = "0xA738931B9Dd4019D282D9cf368644fEc52e9ec58",
+    operator = EmploymentAddress,
     flowRateAllowance = "3858024691358",
     permissionType = 7
 ) {
@@ -40,6 +40,8 @@ async function updateFlowPermissions(
 
         console.log("Updating your flow permissions...");
 
+
+        // console.log(updateFlowOperatorOperation);
         
         // await updateFlowOperatorOperation
         //     .getPopulatedTransactionRequest(employer)

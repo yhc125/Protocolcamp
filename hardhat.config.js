@@ -35,9 +35,7 @@ module.exports = {
           accounts: [
             `${process.env.EMPLOYEE_PRIVATE_KEY}`,
             `${process.env.EMPLOYER_PRIVATE_KEY}`
-          ],
-          gas: 2100000,
-          gasPrice: 8000000000
+          ]
         }
     },
     namedAccounts: {

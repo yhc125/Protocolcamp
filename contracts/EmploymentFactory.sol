@@ -51,6 +51,7 @@ contract EmploymentFactory {
         return idToEmployment[_employmentId];
     }
 
+    // 이 Factory에서 생성된 총 Employment 개수
     function getEmploymentID() external view returns (uint256) {
         return employmentId;
     }

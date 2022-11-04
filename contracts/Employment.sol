@@ -185,6 +185,16 @@ contract Employment is SuperAppBase {
     //     employer = _newOwner;
     // }
 
+    /// @notice Send a lump sum of super tokens into the contract.
+    /// @dev This requires a super token ERC20 approval.
+    /// @param token Super Token to transfer.
+    /// @param amount Amount to transfer.
+    function sendLumpSumToContract(ISuperToken token, uint256 amount) external {
+        if (!accountList[msg.sender] && msg.sender != employer) revert Unauthorized();
+
+        token.transferFrom(msg.sender, address(this), amount);
+    }
+
 
     /// @notice Create a stream into the contract.
     /// @dev This requires the contract to be a flowOperator for the msg sender.
