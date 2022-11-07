@@ -5,7 +5,7 @@ const EmploymentFactoryContract = require("../artifacts/contracts/EmploymentFact
 
 async function main() {
     //NOTE: this is set as the goerli url, but can be changed to reflect your RPC URL and network of choice
-    const url = `${process.env.MUMBAI_URL}`
+    const url = `${process.env.GOERLI_URL}`
     const customHttpProvider = new ethers.providers.JsonRpcProvider(url)
     // const customHttpProvider = new Web3.providers.HttpProvider(url)
 

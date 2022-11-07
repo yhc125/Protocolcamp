@@ -2,7 +2,7 @@ const ethers = require("ethers")
 const { Framework } = require("@superfluid-finance/sdk-core")
 
 
-const EmploymentAddress = "0x5CE84E535bc749eaF40d7f8E7F9244700f2a09a6"
+const EmploymentAddress = "0xB3EFAd14752CD990665A14923EeEdEa4f2831C44"
 
 const url = process.env.MUMBAI_URL
 
@@ -41,15 +41,6 @@ async function updateFlowPermissions(
         console.log("Updating your flow permissions...");
 
 
-        // console.log(updateFlowOperatorOperation);
-        
-        // await updateFlowOperatorOperation
-        //     .getPopulatedTransactionRequest(employer)
-        //     .then(TransactionRequest => {
-        //         const gas = employer.estimateGas(TransactionRequest);
-        //         console.log(gas);
-        //     });
-        
         const result = await updateFlowOperatorOperation.exec(employer);
 
         console.log(result);

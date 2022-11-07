@@ -11,7 +11,7 @@ require("dotenv").config()
 //3) Make sure that you add the address of your own money router contract
 //4) Make sure that you change the 'amount' field in the moneyRouterApproval operation to reflect the proper amount
 //3) run: npx hardhat run scripts/tokenApproval.js --network goerli
-const EmploymentAddress = "0x5CE84E535bc749eaF40d7f8E7F9244700f2a09a6"
+const EmploymentAddress = "0xB3EFAd14752CD990665A14923EeEdEa4f2831C44"
 
 const url = process.env.MUMBAI_URL
 

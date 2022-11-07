@@ -7,12 +7,12 @@ require("dotenv").config()
 
 //place deployed address of the loan factory here...
 // 현재 id = 1에 대한 employmentAddress
-const EmploymentAddress = "0xd22254B20aEB002380C28bB2Bb0149b462720bca"
+const EmploymentAddress = "0xB3EFAd14752CD990665A14923EeEdEa4f2831C44"
 
 
 //place the ID of your loan here. Note that loanIds start at 1
 const LoanId = 1
-const flowRate = 10;
+const amountInEther = 10;
 //NOTE: this is set as the goerli url, but can be changed to reflect your RPC URL and network of choice
 const url = process.env.MUMBAI_URL
 
@@ -56,13 +56,11 @@ async function main() {
     )
 
     try {
-        const calculatedFlowRate = calculateFlowRate(flowRate);
+        const calculatedFlowRate = calculateFlowRate(amountInEther);
 
         await employment
             .connect(employer)
-            .createFlowIntoContract(DAIx, calculatedFlowRate, { 
-                gasLimit: 100000,
-               })
+            .createFlowIntoContract(DAIx, calculatedFlowRate)
             .then(tx => {
                 console.log(
                     "createFlowOperation successful! here is your tx hash: ",

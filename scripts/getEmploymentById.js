@@ -5,10 +5,10 @@ const EmploymentFactoryABI =
 require("dotenv").config()
 
 //place deployed address of the loan factory here...
-const EmploymentFactoryAddress = "0xf626d07439dB0cE8693F7D2E5118D2dE6d25b4de"
+const EmploymentFactoryAddress = "0x8b1F22D13aFfC0Cc7f3bb7332707625cEfc2ca09"
 
 //place the ID of your loan here. Note that loanIds start at 1
-const LoanId = 3
+const LoanId = 2
 //NOTE: this is set as the goerli url, but can be changed to reflect your RPC URL and network of choice
 const url = process.env.MUMBAI_URL
 
@@ -30,7 +30,7 @@ async function main() {
 
     const employmentAddress = await employmentFactory.getEmploymentByID(LoanId)
 
-    console.log(`The address of loan ${employmentAddress}`)
+    console.log(`The address of employment ${employmentAddress}`)
 }
 
 main()

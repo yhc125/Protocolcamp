@@ -26,10 +26,6 @@ contract Employment is SuperAppBase {
     CFAv1Library.InitData public cfaV1;
     // IDAv1Library.InitData public idaV1;
 
-    /// @notice Constant used for initialization of CFAv1 and for callback modifiers.
-    bytes32 public constant CFA_ID =
-        keccak256("org.superfluid-finance.agreements.ConstantFlowAgreement.v1");
-
     // /// @notice Index ID. Never changes.
     // uint32 public constant INDEX_ID = 0;
 
@@ -58,12 +54,6 @@ contract Employment is SuperAppBase {
     // 이후 부서별로 나눌 때 쓸 수도?
     mapping(address => bool) public accountList;
 
-    
-    /// @dev checks that only the CFA is being used
-    ///@param agreementClass the address of the agreement which triggers callback
-    function _isCFAv1(address agreementClass) private view returns (bool) {
-        return ISuperAgreement(agreementClass).agreementType() == CFA_ID;
-    }
 
     ///@dev checks that only the salaryToken is used when sending streams into this contract
     ///@param superToken the token being streamed into the contract
@@ -75,15 +65,6 @@ contract Employment is SuperAppBase {
     //for usage in callbacks only
     modifier onlyHost() {
         require(msg.sender == address(cfaV1.host), "Only host can call callback");
-        _;
-    }
-
-    ///@dev used to implement _isSameToken and _isCFAv1 modifiers
-    ///@param superToken used when sending streams into contract to trigger callbacks
-    ///@param agreementClass the address of the agreement which triggers callback
-    modifier onlyExpected(ISuperToken superToken, address agreementClass) {
-        require(_isSameToken(superToken), "RedirectAll: not accepted token");
-        require(_isCFAv1(agreementClass), "RedirectAll: only CFAv1 supported");
         _;
     }
 
@@ -101,12 +82,19 @@ contract Employment is SuperAppBase {
         host = _host;
         salaryFluidOpen = false;
 
-        // CFA lib initialization
-        IConstantFlowAgreementV1 cfa = IConstantFlowAgreementV1(
-            address(_host.getAgreementClass(CFA_ID))
+        // Initialize CFA Library
+        cfaV1 = CFAv1Library.InitData(
+            host,
+            IConstantFlowAgreementV1(
+                address(
+                    host.getAgreementClass(
+                        keccak256("org.superfluid-finance.agreements.ConstantFlowAgreement.v1")
+                    )
+                )
+            )
         );
 
-        cfaV1 = CFAv1Library.InitData(_host, cfa);
+        accountList[_employer] = true;
 
         //  // IDA Library Initialize.
         // idaV1 = IDAv1Library.InitData(
@@ -194,7 +182,6 @@ contract Employment is SuperAppBase {
 
         token.transferFrom(msg.sender, address(this), amount);
     }
-
 
     /// @notice Create a stream into the contract.
     /// @dev This requires the contract to be a flowOperator for the msg sender.

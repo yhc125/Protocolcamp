@@ -5,7 +5,7 @@ const EmploymentFactoryABI =
 require("dotenv").config()
 
 //place deployed address of the loan factory here...
-const EmploymentFactoryAddress = "0xf626d07439dB0cE8693F7D2E5118D2dE6d25b4de"
+const EmploymentFactoryAddress = "0xB3EFAd14752CD990665A14923EeEdEa4f2831C44"
 
 //NOTE: this is set as the goerli url, but can be changed to reflect your RPC URL and network of choice
 const url = process.env.MUMBAI_URL

@@ -10,11 +10,10 @@ require("dotenv").config()
 //3) Make sure that you add the address of your own money router contract
 //4) Make sure that you change the 'amount' field in the sendLumpSumToContract function to reflect the proper amount
 //3) run: npx hardhat run scripts/sendLumpSumToContract.js --network goerli
-const EmploymentAddress = "0x5CE84E535bc749eaF40d7f8E7F9244700f2a09a6"
+const EmploymentAddress = "0xB3EFAd14752CD990665A14923EeEdEa4f2831C44"
 
 const url = process.env.MUMBAI_URL
 
-const customHttpProvider = new ethers.providers.JsonRpcProvider(url)
 
 async function main() {
     // Hardhat always runs the compile task when running scripts with its command
@@ -25,7 +24,8 @@ async function main() {
     // await hre.run('compile');
 
     //NOTE - make sure you add the address of the previously deployed money router contract on your network
- 
+    const customHttpProvider = new ethers.providers.JsonRpcProvider(url)
+
     const network = await customHttpProvider.getNetwork()
 
     const sf = await Framework.create({
@@ -46,15 +46,16 @@ async function main() {
 
     const daix = await sf.loadSuperToken("fDAIx")
 
+
     //call money router send lump sum method from signers[0]
     await employment
         .connect(employer)
-        .sendLumpSumToContract(daix.address, ethers.utils.parseEther("500"), {gasLimit : 100000})
+        .sendLumpSumToContract(daix.address, ethers.utils.parseEther("500"))
         .then(function (tx) {
             console.log(`
-        Congrats! You just successfully sent funds to the money router contract. 
+        Congrats! You just successfully sent funds to the money router contract.
         Tx Hash: ${tx.hash}
-    `)
+        `)
         })
 }
 
