@@ -7,7 +7,7 @@ require("dotenv").config()
 
 //place deployed address of the loan factory here...
 // 현재 id = 1에 대한 employmentAddress
-const EmploymentAddress = "0xB3EFAd14752CD990665A14923EeEdEa4f2831C44"
+const EmploymentAddress = "0xB68871F55cEC84a6cf118d55cbc5A499e027D1a8"
 
 
 //place the ID of your loan here. Note that loanIds start at 1
@@ -60,7 +60,7 @@ async function main() {
 
         await employment
             .connect(employer)
-            .createFlowIntoContract(DAIx, calculatedFlowRate)
+            .createFlowFromContract(DAIx, employer.address, calculatedFlowRate)
             .then(tx => {
                 console.log(
                     "createFlowOperation successful! here is your tx hash: ",

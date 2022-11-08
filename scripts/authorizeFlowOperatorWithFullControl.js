@@ -3,15 +3,14 @@ const { Framework } = require("@superfluid-finance/sdk-core")
 
 
 const EmploymentAddress = "0xB68871F55cEC84a6cf118d55cbc5A499e027D1a8"
-const EmploymentFactoryAddress = "0x8b1F22D13aFfC0Cc7f3bb7332707625cEfc2ca09"
 
 const url = process.env.MUMBAI_URL
 
 const customHttpProvider = new ethers.providers.JsonRpcProvider(url)
 
 async function updateFlowPermissions(
-    operator = EmploymentFactoryAddress,
-    flowRateAllowance = "38580246913580",
+    operator = EmploymentAddress,
+    flowRateAllowance = "3858024691358024",
     permissionType = 7
 ) {
     const network = await customHttpProvider.getNetwork()
@@ -20,8 +19,6 @@ async function updateFlowPermissions(
         chainId: network.chainId,
         provider: customHttpProvider
     })
-
-    console.log(sf.settings.config);
 
     const employer = sf.createSigner({
         privateKey: process.env.EMPLOYER_PRIVATE_KEY,
@@ -33,9 +30,8 @@ async function updateFlowPermissions(
 
     // console.log(sf.cfaV1);
     try {
-        const updateFlowOperatorOperation = sf.cfaV1.updateFlowOperatorPermissions({
+        const updateFlowOperatorOperation = sf.cfaV1.authorizeFlowOperatorWithFullControl({
             flowOperator: operator,
-            permissions: permissionType,
             flowRateAllowance: flowRateAllowance,
             superToken: DAIx
             // userData?: string

@@ -10,7 +10,7 @@ require("dotenv").config()
 //3) Make sure that you add the address of your own money router contract
 //4) Make sure that you change the 'amount' field in the sendLumpSumToContract function to reflect the proper amount
 //3) run: npx hardhat run scripts/sendLumpSumToContract.js --network goerli
-const EmploymentAddress = "0xB3EFAd14752CD990665A14923EeEdEa4f2831C44"
+const EmploymentAddress = "0xB68871F55cEC84a6cf118d55cbc5A499e027D1a8"
 
 const url = process.env.MUMBAI_URL
 

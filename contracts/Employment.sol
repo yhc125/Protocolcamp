@@ -7,10 +7,6 @@ import {CFAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/app
 
 import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/agreements/IConstantFlowAgreementV1.sol";
 
-// import {IInstantDistributionAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/agreements/IInstantDistributionAgreementV1.sol";
-
-// import {IDAv1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/IDAv1Library.sol";
-
 import {SuperAppBase} from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperAppBase.sol";
 
 error Unauthorized();
@@ -96,23 +92,6 @@ contract Employment is SuperAppBase {
 
         accountList[_employer] = true;
 
-        //  // IDA Library Initialize.
-        // idaV1 = IDAv1Library.InitData(
-        //     _host,
-        //     IInstantDistributionAgreementV1(
-        //         address(
-        //             _host.getAgreementClass(
-        //                 keccak256(
-        //                     "org.superfluid-finance.agreements.InstantDistributionAgreement.v1"
-        //                 )
-        //             )
-        //         )
-        //     )
-        // );
-
-        // // Creates the IDA Index through which tokens will be distributed
-        // idaV1.createIndex(_salaryToken, INDEX_ID);
-
         // super app registration
         uint256 configWord = SuperAppDefinitions.APP_LEVEL_FINAL |
             SuperAppDefinitions.BEFORE_AGREEMENT_CREATED_NOOP |
@@ -126,28 +105,9 @@ contract Employment is SuperAppBase {
         _host.registerApp(configWord);
     }
 
-    /// @dev Calculates the flow rate to be sent to the lender to repay the stream.
-    /// @return salaryFlowRate The flow rate to be paid to the lender.
-    function getsalaryFlowRate() public view returns (int96 salaryFlowRate) {
-        return (
-            int96(
-                salaryMonths / 30 * 86400
-            )
-        );
-    }
     // ---------------------------------------------------------------------------------------------
     // FUNCTIONS & CORE LOGIC
 
-    function getTotalAmountRemaining() public view returns (uint256) {
-        int256 secondsLeft = (salaryMonths * int256((365 * 86400) / 12)) - 
-            int256(block.timestamp - salaryGiveTime);
-        if (secondsLeft <= 0) {
-            return 0;
-        } else {
-            //if an amount is left, return the total amount to be paid
-            return uint256(secondsLeft) * uint256(int256(getsalaryFlowRate()));
-        }
-    }
 
     /// @notice Add account to allow list.
     /// @param _account Account to allow.
@@ -172,6 +132,30 @@ contract Employment is SuperAppBase {
 
     //     employer = _newOwner;
     // }
+
+    /// @dev creates a stream from this contract to desired receiver at desired rate
+    function createStream(int96 flowRate, address receiver) external {
+
+        // Create stream
+        cfaV1.createFlow(receiver, salaryToken, flowRate);
+
+    }
+
+    /// @dev updates a stream from this contract to desired receiver to desired rate
+    function updateStream(int96 flowRate, address receiver) external {
+
+        // Update stream
+        cfaV1.updateFlow(receiver, salaryToken, flowRate);
+
+    }
+
+    /// @dev deletes a stream from this contract to desired receiver
+    function deleteStream(address receiver) external {
+
+        // Delete stream
+        cfaV1.deleteFlow(address(this), receiver, salaryToken);
+
+    }
 
     /// @notice Send a lump sum of super tokens into the contract.
     /// @dev This requires a super token ERC20 approval.
@@ -258,28 +242,6 @@ contract Employment is SuperAppBase {
 
         cfaV1.deleteFlow(address(this), receiver, token);
     }
-
-
-    // ---------------------------------------------------------------------------------------------
-    // IDA OPERATIONS
-    /// @notice Takes the entire balance of the designated salaryToken in the contract and distributes it out to unit holders w/ IDA
-    // function distribute() public {
-    //     uint256 salaryTokenBalance = salaryToken.balanceOf(address(this));
-
-    //     (uint256 actualDistributionAmount, ) = idaV1.ida.calculateDistribution(
-    //         salaryToken,
-    //         address(this),
-    //         INDEX_ID,
-    //         salaryTokenBalance
-    //     );
-
-    //     idaV1.distribute(salaryToken, INDEX_ID, actualDistributionAmount);
-    // }
-
-    // ---------------------------------------------------------------------------------------------
-    // SUPER APP CALLBACKS
-
-    
 
 
 }
