@@ -13,23 +13,22 @@ error Unauthorized();
 
 contract Employment is SuperAppBase {
     using CFAv1Library for CFAv1Library.InitData;
-    // using IDAv1Library for IDAv1Library.InitData;
 
     // ---------------------------------------------------------------------------------------------
     // STORAGE & IMMUTABLES
 
     /// @notice Importing the CFAv1 Library to make working with streams easy.
     CFAv1Library.InitData public cfaV1;
-    // IDAv1Library.InitData public idaV1;
 
-    // /// @notice Index ID. Never changes.
-    // uint32 public constant INDEX_ID = 0;
+    /// @notice Constant used for initialization of CFAv1 and for callback modifiers.
+    bytes32 public constant CFA_ID =
+        keccak256("org.superfluid-finance.agreements.ConstantFlowAgreement.v1");
 
-    /// @notice Total amount borrowed.
-    int256 public immutable salaryMonths;
+    /// @notice Total amount salary.
+    int96 public salaryFlowRate;
 
     /// @notice Address of employer - must be allow-listed for this example
-    address public immutable employer;
+    address public employer;
 
     /// @notice Employee address
     address public immutable employee;
@@ -40,21 +39,39 @@ contract Employment is SuperAppBase {
     /// @notice Token being payed
     ISuperToken public immutable salaryToken;
 
+   /// @notice Employer로부터 발급받은 자신(Employee)의 Employment에 대해 Employee가 설정한 Id
+    uint256 public immutable employeeId;
+
     /// @notice boolean flag to track whether or not the loan is open
     bool public salaryFluidOpen;
 
     /// @notice Timestamp of the salary give time.
-    uint256 public salaryGiveTime;
+    uint256 public salaryStartingTime;
+
 
     /// @notice Allow list.
-    // 이후 부서별로 나눌 때 쓸 수도?
+    //  Employer가 서로 다른 계정에서 flow를 만들고 싶을 수 있으니까
     mapping(address => bool) public accountList;
 
+    // ---------------------------------------------------------------------------------------------
+    //MODIFIERS
 
-    ///@dev checks that only the salaryToken is used when sending streams into this contract
+    /// @dev checks that only the CFA is being used
+    ///@param agreementClass the address of the agreement which triggers callback
+    function _isCFAv1(address agreementClass) private view returns (bool) {
+        return ISuperAgreement(agreementClass).agreementType() == CFA_ID;
+    }
+
+    ///@dev checks that only the borrowToken is used when sending streams into this contract
     ///@param superToken the token being streamed into the contract
     function _isSameToken(ISuperToken superToken) private view returns (bool) {
         return address(superToken) == address(salaryToken);
+    }
+
+    // Employer만 접근
+    modifier onlyEmployer() {
+        require(msg.sender != employee, "You do not have permission.");
+        _;
     }
 
     ///@dev ensures that only the host can call functions where this is implemented
@@ -64,16 +81,27 @@ contract Employment is SuperAppBase {
         _;
     }
 
+    ///@dev used to implement _isSameToken and _isCFAv1 modifiers
+    ///@param superToken used when sending streams into contract to trigger callbacks
+    ///@param agreementClass the address of the agreement which triggers callback
+    modifier onlyExpected(ISuperToken superToken, address agreementClass) {
+        require(_isSameToken(superToken), "RedirectAll: not accepted token");
+        require(_isCFAv1(agreementClass), "RedirectAll: only CFAv1 supported");
+        _;
+    }
+
         constructor(
-        int256 _salaryMonths, // total payback months
+        int96 _salaryFlowRate, // total payback months
+        uint256 _employeeId, // Id of employee
         address _employer, // allow-listed employer address
         address _employee, // borrower address
         ISuperToken _salaryToken, // super token to be used in borrowing
         ISuperfluid _host // address of SF host
     ) {
-        salaryMonths = _salaryMonths;
+        salaryFlowRate = _salaryFlowRate;
         employer = _employer;
         employee = _employee;
+        employeeId = _employeeId;
         salaryToken = _salaryToken;
         host = _host;
         salaryFluidOpen = false;
@@ -91,23 +119,18 @@ contract Employment is SuperAppBase {
         );
 
         accountList[_employer] = true;
+        accountList[_employee] = true;
 
-        // super app registration
-        uint256 configWord = SuperAppDefinitions.APP_LEVEL_FINAL |
-            SuperAppDefinitions.BEFORE_AGREEMENT_CREATED_NOOP |
-            SuperAppDefinitions.BEFORE_AGREEMENT_UPDATED_NOOP |
-            SuperAppDefinitions.BEFORE_AGREEMENT_TERMINATED_NOOP;
-
-        // Using host.registerApp because we are using testnet. If you would like to deploy to
-        // mainnet, this process will work differently. You'll need to use registerAppWithKey or
-        // registerAppByFactory.
-        // https://github.com/superfluid-finance/protocol-monorepo/wiki/Super-App-White-listing-Guide
-        _host.registerApp(configWord);
     }
 
-    // ---------------------------------------------------------------------------------------------
-    // FUNCTIONS & CORE LOGIC
+    //@notice 이 Employment의 주인인 employee의 Id
+    function getEmployeeId() external view returns (uint256) {
+        return employeeId;
+    }
 
+    function getSalaryStartingTime() external view returns (uint256) {
+        return salaryStartingTime;
+    }
 
     /// @notice Add account to allow list.
     /// @param _account Account to allow.
@@ -127,34 +150,10 @@ contract Employment is SuperAppBase {
 
     /// @notice Transfer ownership.
     /// @param _newOwner New owner account.
-    // function changeOwner(address _newOwner) external {
-    //     if (msg.sender != employer) revert Unauthorized();
+    function changeOwner(address _newOwner) external {
+        if (msg.sender != employer) revert Unauthorized();
 
-    //     employer = _newOwner;
-    // }
-
-    /// @dev creates a stream from this contract to desired receiver at desired rate
-    function createStream(int96 flowRate, address receiver) external {
-
-        // Create stream
-        cfaV1.createFlow(receiver, salaryToken, flowRate);
-
-    }
-
-    /// @dev updates a stream from this contract to desired receiver to desired rate
-    function updateStream(int96 flowRate, address receiver) external {
-
-        // Update stream
-        cfaV1.updateFlow(receiver, salaryToken, flowRate);
-
-    }
-
-    /// @dev deletes a stream from this contract to desired receiver
-    function deleteStream(address receiver) external {
-
-        // Delete stream
-        cfaV1.deleteFlow(address(this), receiver, salaryToken);
-
+        employer = _newOwner;
     }
 
     /// @notice Send a lump sum of super tokens into the contract.
@@ -194,13 +193,14 @@ contract Employment is SuperAppBase {
         if (!accountList[msg.sender] && msg.sender != employer) revert Unauthorized();
 
         cfaV1.deleteFlow(msg.sender, address(this), token);
+        salaryFluidOpen = false;
     } 
 
     /// @notice Withdraw funds from the contract.
     /// @param token Token to withdraw.
     /// @param amount Amount to withdraw.
-    function withdrawFunds(ISuperToken token, uint256 amount) external {
-        if (!accountList[msg.sender] && msg.sender != employer) revert Unauthorized();
+    function withdrawSalary(ISuperToken token, uint256 amount) external {
+        if (!accountList[msg.sender] && msg.sender != employee) revert Unauthorized();
 
         token.transfer(msg.sender, amount);
     }
@@ -218,6 +218,7 @@ contract Employment is SuperAppBase {
         if (!accountList[msg.sender] && msg.sender != employer) revert Unauthorized();
 
         cfaV1.createFlow(receiver, token, flowRate);
+        salaryStartingTime = block.timestamp;
     }
 
     /// @notice Update flow from contract to specified address.
@@ -229,7 +230,7 @@ contract Employment is SuperAppBase {
         address receiver,
         int96 flowRate
     ) external {
-        if (!accountList[msg.sender] && msg.sender != employer) revert Unauthorized();
+        if (!accountList[msg.sender] && msg.sender != employee) revert Unauthorized();
 
         cfaV1.updateFlow(receiver, token, flowRate);
     }
@@ -238,10 +239,74 @@ contract Employment is SuperAppBase {
     /// @param token Token to stop streaming.
     /// @param receiver Receiver of stream.
     function deleteFlowFromContract(ISuperToken token, address receiver) external {
-        if (!accountList[msg.sender] && msg.sender != employer) revert Unauthorized();
+        if (!accountList[msg.sender] && msg.sender != employee) revert Unauthorized();
 
         cfaV1.deleteFlow(address(this), receiver, token);
     }
+
+    // @notice Update flowAmount Permission for changing salaryAmount
+    function updateSalaryAmountPermission(int96 _newSalaryFlowAmount) external {
+        if (!accountList[msg.sender] && msg.sender != employee) revert Unauthorized();
+
+        cfaV1.updateFlowOperatorPermissions(address(this), salaryToken, 7, _newSalaryFlowAmount);
+    }
+
+    //@notice Get WorkingPeriod in this company
+    function getWorkingPeriod() external view returns (uint256) {
+        return block.timestamp - salaryStartingTime;
+    }
+
+        // ---------------------------------------------------------------------------------------------
+    // SUPER APP CALLBACKS
+
+    /// @dev super app after agreement created callback
+    function afterAgreementCreated(
+        ISuperToken _superToken,
+        address _agreementClass,
+        bytes32, // _agreementId,
+        bytes calldata, /*_agreementData*/
+        bytes calldata, // _cbdata,
+        bytes calldata ctx
+    )
+        external
+        override
+        onlyExpected(_superToken, _agreementClass)
+        onlyHost
+        returns (bytes memory newCtx)
+    {
+        
+    }
+
+    /// @dev super app after agreement updated callback
+    function afterAgreementUpdated(
+        ISuperToken _superToken,
+        address _agreementClass,
+        bytes32, // _agreementId,
+        bytes calldata, /*_agreementData*/
+        bytes calldata, // _cbdata,
+        bytes calldata ctx
+    )
+        external
+        override
+        onlyExpected(_superToken, _agreementClass)
+        onlyHost
+        returns (bytes memory newCtx)
+    {
+
+    }
+
+    /// @dev super app after agreement terminated callback
+    function afterAgreementTerminated(
+        ISuperToken _superToken,
+        address _agreementClass,
+        bytes32, // _agreementId,
+        bytes calldata, /*_agreementData*/
+        bytes calldata, // _cbdata,
+        bytes calldata ctx
+    ) external override onlyHost returns (bytes memory newCtx) {
+      
+    }
+    
 
 
 }
