@@ -7,63 +7,53 @@ import {Employment} from "./Employment.sol";
 
 contract EmploymentFactory {
     /// @notice counter which is iterated +1 for each new employment created.
-
-    /// @notice 이 Factory에서 발행된 총 Employment 계약 수
-    uint256 public numberOfEmployment = 0;
+    /// @dev Note that the value begins at 0 here, but the first one will start at one.
+    uint256 public employmentId = 0;
 
     /// @notice mapping of loanId to the loan contract
     mapping(uint256 => Employment) public idToEmployment;
 
-    /// @notice
-    uint256[] public employeeIdList;
-
     /// @notice mapping of loan owner (i.e. the msg.sender on the call) to the loan Id
     mapping(address => uint256) public employmentOwners;
-    
+
 
     /// @notice Creates new loan contract.
-    /// @param _salaryFlowRate Amount to borrow.
-    /// @param _employeeId EmployeeId of Employment to create
+    /// @param _salaryMonths Amount to borrow.
      /// @param _employer Employer address.
     /// @param _employee Borrower address.
     /// @param _salaryToken Token to borrow.
     /// @param _host Superfluid host.
+    /// @return Loan ID.
     function createNewEmployment(
-        int96 _salaryFlowRate,
-        uint256 _employeeId,
+        int256 _salaryMonths,
         address _employer,
         address _employee,
         ISuperToken _salaryToken,
         ISuperfluid _host
-    ) external {
+    ) external returns (uint256) {
         Employment newEmployment = new Employment(
-            _salaryFlowRate,
-            _employeeId,
+            _salaryMonths,
             _employer,
             _employee,
             _salaryToken,
             _host
         );
 
-        numberOfEmployment++;
+        employmentId++;
 
-        idToEmployment[_employeeId] = newEmployment;
-        employmentOwners[_employee] = _employeeId;
-        employeeIdList.push(_employeeId);
-        
+        idToEmployment[employmentId] = newEmployment;
+        employmentOwners[msg.sender] = employmentId;
+
+        return employmentId;
     }
 
-    // @notice 사용자 Id에 Mapping된 Employment 계약서를 가져옴.
-    function getEmploymentById(uint256 _employeeId) external view returns (Employment) {
-        return idToEmployment[_employeeId];
+    function getEmploymentByID(uint256 _employmentId) external view returns (Employment) {
+        return idToEmployment[_employmentId];
     }
 
-    // @notice 이 Factory에서 발급된 계약서 개수
-    function getNumberOfEmployment() external view returns (uint256) {
-        return numberOfEmployment;
+    // 이 Factory에서 생성된 총 Employment 개수
+    function getEmploymentID() external view returns (uint256) {
+        return employmentId;
     }
 
-    function getEmployeeIdList() external view returns (uint256[] memory) {
-        return employeeIdList;
-    }
 }
