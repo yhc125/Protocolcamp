@@ -3,6 +3,7 @@ const { Framework } = require("@superfluid-finance/sdk-core")
 const EmploymentABI =
     require("../artifacts/contracts/Employment.sol/Employment.json").abi
 require("dotenv").config()
+const { calculateFlowRate } = require("./calculateFlowRate");
 
 
 //place deployed address of the loan factory here...
@@ -18,20 +19,6 @@ const url = process.env.MUMBAI_URL
 
 const customHttpProvider = new ethers.providers.JsonRpcProvider(url)
 
-function calculateFlowRate(amountInEther) {
-    if (
-      typeof Number(amountInEther) !== "number" ||
-      isNaN(Number(amountInEther)) === true
-    ) {
-      console.log(typeof Number(amountInEther));
-      alert("You can only calculate a flowRate based on a number");
-      return;
-    } else if (typeof Number(amountInEther) === "number") {
-      const monthlyAmount = ethers.utils.parseEther(amountInEther.toString());
-      const calculatedFlowRate = Math.floor(monthlyAmount / 3600 / 24 / 30);
-      return calculatedFlowRate;
-    }
-}
 
 async function main() {
     const network = await customHttpProvider.getNetwork()

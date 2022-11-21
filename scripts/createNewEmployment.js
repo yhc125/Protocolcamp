@@ -3,9 +3,13 @@ const { Framework } = require("@superfluid-finance/sdk-core")
 const EmploymentFactoryABI =
     require("../artifacts/contracts/EmploymentFactory.sol/EmploymentFactory.json").abi
 require("dotenv").config()
+const { calculateFlowRate } = require("./calculateFlowRate");
+
 
 //place deployed address of the loan factory here...
 const EmploymentFactoryAddress = "0x8b1F22D13aFfC0Cc7f3bb7332707625cEfc2ca09"
+const employementId = "125"
+const amountInEther = 10
 
 //NOTE: this is set as the goerli url, but can be changed to reflect your RPC URL and network of choice
 const url = process.env.MUMBAI_URL
@@ -38,10 +42,13 @@ async function main() {
         customHttpProvider
     )
 
+    const calculatedFlowRate = calculateFlowRate(amountInEther);
+
     await employmentFactory
         .connect(employer)
         .createNewEmployment(
-            ethers.utils.parseEther("1000"), //borrow amount = 1000 dai
+            calculatedFlowRate,
+            employementId,
             employer.address, //address of employer who will be effectively whitelisted in this case
             employee.address, // address of borrower
             daix.address, //daix address - this is the token we'll be using: borrowing in and paying back

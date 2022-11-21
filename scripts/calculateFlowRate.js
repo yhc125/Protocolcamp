@@ -1,5 +1,5 @@
 
-function calculateFlowRate(amountInEther) {
+const calculateFlowRate = async (amountInEther) => {
     if (
       typeof Number(amountInEther) !== "number" ||
       isNaN(Number(amountInEther)) === true
@@ -14,4 +14,4 @@ function calculateFlowRate(amountInEther) {
     }
 }
 
-export default calculateFlowRate;
+exports.calculateFlowRate = calculateFlowRate;
