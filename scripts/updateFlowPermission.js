@@ -10,7 +10,7 @@ const url = process.env.MUMBAI_URL
 const customHttpProvider = new ethers.providers.JsonRpcProvider(url)
 
 async function updateFlowPermissions(
-    operator = "0xCBFd37b963Bc2ed2B61683f754D4F34A207F20D9",
+    operator = EmploymentFactoryAddress,
     flowRateAllowance = "38580246913580",
     permissionType = 7
 ) {
@@ -20,6 +20,8 @@ async function updateFlowPermissions(
         chainId: network.chainId,
         provider: customHttpProvider
     })
+
+    console.log(sf.settings.config);
 
     const employer = sf.createSigner({
         privateKey: process.env.EMPLOYER_PRIVATE_KEY,
@@ -44,7 +46,7 @@ async function updateFlowPermissions(
 
         const result = await updateFlowOperatorOperation.exec(employer);
 
-        console.log(result.hash);
+        console.log(result);
 
         console.log(
             `Congrats - you've just updated flow permissions for ${EmploymentAddress}
