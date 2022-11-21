@@ -28,7 +28,7 @@ async function main() {
         customHttpProvider
     )
 
-    const employmentAddress = await employmentFactory.getEmploymentByID(LoanId)
+    const employmentAddress = await employmentFactory.getEmploymentById(LoanId)
 
     console.log(`The address of employment ${employmentAddress}`)
 }
