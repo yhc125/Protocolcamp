@@ -18,8 +18,7 @@ async function updateFlowPermissions(
         chainId: network.chainId,
         provider: customHttpProvider
     })
-
-    console.log(sf.settings.config);
+    // console.log(sf.settings.config);
 
     const employer = sf.createSigner({
         privateKey: process.env.EMPLOYER_PRIVATE_KEY,
