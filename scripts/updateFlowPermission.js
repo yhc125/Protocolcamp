@@ -1,7 +1,7 @@
 const ethers = require("ethers")
 const { Framework } = require("@superfluid-finance/sdk-core")
 
-const EmploymentAddress = "0xB68871F55cEC84a6cf118d55cbc5A499e027D1a8"
+const EmploymentAddress = "0x46a48497F15221Bdd1D01fBeE881F620480E573a"
 
 const url = process.env.MUMBAI_URL
 
@@ -18,16 +18,17 @@ async function updateFlowPermissions(
         chainId: network.chainId,
         provider: customHttpProvider
     })
-    // console.log(sf.settings.config);
+    // consol  e.log(sf.settings.config);
 
     const employer = sf.createSigner({
-        privateKey: process.env.EMPLOYER_PRIVATE_KEY,
+        privateKey: process.env.EMPLOYEE_PRIVATE_KEY,
         provider: customHttpProvider
     })
 
     const DAIxContract = await sf.loadSuperToken("fDAIx");
     const DAIx = DAIxContract.address;
-
+    
+    console.log(DAIx);
     // console.log(sf.cfaV1);
     try {
         const updateFlowOperatorOperation = sf.cfaV1.updateFlowOperatorPermissions({
